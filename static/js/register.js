@@ -5,6 +5,8 @@ $(function(){
 	var error_check_password = false;
 	var error_email = false;
 	var error_check = false;
+	var error_mobile = false;
+	document.getElementById('zphone').disabled = true;
 
 
 	$('#user_name').blur(function() {
@@ -21,6 +23,10 @@ $(function(){
 
 	$('#email').blur(function() {
 		check_email();
+	});
+
+	$('#mobile').blur(function() {
+		check_mobile();
 	});
 
 	$('#allow').click(function() {
@@ -99,7 +105,7 @@ $(function(){
 		{
 			$('#email').next().html('你输入的邮箱格式不正确')
 			$('#email').next().show();
-			error_check_password = true;
+			error_email = true;
 		}
 
 	}
@@ -110,8 +116,9 @@ $(function(){
 		check_pwd();
 		check_cpwd();
 		check_email();
+		check_mobile();
 
-		if(error_name == false && error_password == false && error_check_password == false && error_email == false && error_check == false)
+		if(error_name == false && error_password == false && error_check_password == false && error_email == false && error_check == false && error_mobile == false)
 		{
 			return true;
 		}
@@ -122,8 +129,68 @@ $(function(){
 
 	});
 
+	$('#zphone').click(
+		function(){
+		//发送验证码
+		$.get('/user/send_message', {mobile:$('#mobile').val()}, function(msg) {
+			alert(jQuery.trim(msg.msg));
+			if(msg.msg=='发送成功'){
+				RemainTime();
+			}
+		});
+	})
 
+	//按钮倒计时
+	var iTime = 59;
+	var Account;
+	function RemainTime(){
+		document.getElementById('zphone').disabled = true;
+		var iSecond,sSecond="",sTime="";
+		if (iTime >= 0){
+			iSecond = parseInt(iTime%60);
+			iMinute = parseInt(iTime/60)
+			if (iSecond >= 0){
+				if(iMinute>0){
+					sSecond = iMinute + "分" + iSecond + "秒";
+				}else{
+					sSecond = iSecond + "秒";
+				}
+			}
+			sTime=sSecond;
+			if(iTime==0){
+				clearTimeout(Account);
+				sTime='获取手机验证码';
+				iTime = 59;
+				document.getElementById('zphone').disabled = false;
+			}else{
+				Account = setTimeout("RemainTime()",1000);
+				iTime=iTime-1;
+			}
+		}else{
+			sTime='没有倒计时';
+		}
+		document.getElementById('zphone').value = sTime;
+	}
 
+	// 检查用户输入的手机号是否合法
+	function check_mobile() {
+
+		var re = /^1[345678]\d{9}$/; //校验手机号
+
+		if(re.test($('#mobile').val()))
+		{
+			$('#mobile').next().hide();
+			error_mobile = false;
+			document.getElementById('zphone').disabled = false;
+		}
+		else
+		{
+			$('#mobile').next().html('你输入的手机格式不正确')
+			$('#mobile').next().show();
+			error_mobile = true;
+			document.getElementById('zphone').disabled = true;
+		}
+	}
 
 
 

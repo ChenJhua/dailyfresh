@@ -1,9 +1,10 @@
+import random
 import re
 
 from django.core.mail import send_mail
 from django.core.signing import SignatureExpired
 from django.db import IntegrityError
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.generic import View
 from itsdangerous import TimedJSONWebSignatureSerializer
@@ -11,6 +12,16 @@ from itsdangerous import TimedJSONWebSignatureSerializer
 from apps.users.models import User
 from celery_tasks.tasks import send_active_email
 from dailyfresh import settings
+
+import http.client
+import urllib.request
+
+host = "106.ihuyi.com"
+sms_send_uri = "/webservice/sms.php?method=Submit"
+# 用户名是登录ihuyi.com账号名（例如：cf_demo123）
+account = "C44569738"
+# 密码 查看密码请登录用户中心->验证码、通知短信->帐户及签名设置->APIKEY
+password = "dddf8c8b0c844c6691024c3cf4d17030 "
 
 
 def register(request):
@@ -75,11 +86,13 @@ class RegisterView(View):
         username = request.POST.get('username')
         password = request.POST.get('password')
         password2 = request.POST.get('password2')
+        uphone = request.POST.get('mobile')
+        code = request.POST.get('code')
         email = request.POST.get('email')
         allow = request.POST.get('allow')  # 用户协议，勾选后得到：on
         # todo:检验参数合法性
         # 判断参数不能为空
-        if not all([username, password, password2, email]):
+        if not all([username, password, password2, email, uphone, code]):
             return render(request, 'register.html', {'errmsg': "注册信息不能为空"})
         # 判断两次输入的密码是否一致
         if password != password2:
@@ -90,6 +103,11 @@ class RegisterView(View):
         # 判断是否勾选用户协议
         if allow != 'on':
             return render(request, 'register.html', {'errmsg': "请勾选用户协议"})
+        # 判断手机输入是否正确
+        if not re.match('^1[345678]\d{9}$', uphone):
+            return render(request, 'register.html', {'errmsg': "手机输入不合法"})
+        if code != request.session.get('message_code'):
+            return render(request, 'register.html', {'errmsg': "验证码校验错误"})
         # 处理业务：保存用户到数据表中
         # django提供的方法，会对密码进行加密
         user = None
@@ -97,6 +115,7 @@ class RegisterView(View):
             user = User.objects.create_user(username, email, password)  # type: User
             # 修改用户状态为未激活
             user.is_active = False
+            user.uphone = uphone
             user.save()
         except IntegrityError:
             # 判断用户是否存在
@@ -151,6 +170,30 @@ class ActiveView(View):
         # 响应请求
         return HttpResponse("激活成功，跳转到登录页")
 
+
+def send_message(requset):
+    mobile = requset.GET.get('mobile')
+    user = User.objects.filter(uphone=mobile)
+    if len(user)
+    print(mobile)
+    message_code = ''
+    for i in range(6):
+        i = random.randint(0, 9)
+        message_code += str(i)
+
+    text = "您的验证码是：" + message_code + "。请不要把验证码泄露给其他人。"
+    params = urllib.parse.urlencode(
+        {'account': account, 'password': password, 'content': text, 'mobile': mobile, 'format': 'json'})
+    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+    conn = http.client.HTTPConnection(host, port=80, timeout=30)
+    conn.request("POST", sms_send_uri, params, headers)
+    response = conn.getresponse()
+    response_str = response.read()
+    conn.close()
+    requset.session['message_code'] = message_code
+    print(eval(response_str.decode()))
+
+    return JsonResponse(eval(response_str.decode()))
 
 
 

@@ -9,5 +9,6 @@ urlpatterns = [
     # 类视图函数:as_view() 返回一个视图函数  注意：不要加括号
     url(r'^register$', views.RegisterView.as_view(), name='register'),
     url(r'^active/(.+)$', views.ActiveView.as_view(), name='active'),
+    url(r'^send_message$', views.send_message, name='send_message'),
 ]
 
