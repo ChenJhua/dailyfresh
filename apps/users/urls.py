@@ -18,5 +18,7 @@ urlpatterns = [
     url(r'^address$', views.UserAddressView.as_view(), name='address'),
     # url(r'^address$', login_required(views.UserAddressView.as_view()), name='address'),
     url(r'^$', views.UserInfoView.as_view(), name='info'),
+    # 极验验证
+    url(r'^pc-geetest/register', views.pcgetcaptcha, name='pcgetcaptcha'),
 ]
 

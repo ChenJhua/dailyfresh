@@ -1,3 +1,4 @@
+import json
 import random
 import re
 
@@ -19,6 +20,13 @@ import http.client
 import urllib.request
 
 from utils.common import LoginRequireView, LoginRequireMixin
+from geetest import GeetestLib  # 极验验证
+
+
+# 请在官网申请ID使用，示例ID不可使用
+pc_geetest_id = "9107cbe379daa19cd93b9250f36ba301"  # id
+pc_geetest_key = "73dd706e795ba4e67bad328cf6e68970"  # key
+
 
 # 请求的路径
 host = "106.ihuyi.com"
@@ -333,3 +341,20 @@ class UserAddressView(LoginRequireMixin, View):
 
         # 添加成功后,回到当前页面,刷新数据
         return redirect(reverse('users:address'))
+
+
+def pcgetcaptcha(request):
+    """极验验证函数"""
+    user_id = 'test'
+    gt = GeetestLib(pc_geetest_id, pc_geetest_key)
+    status = gt.pre_process(user_id)
+    request.session[gt.GT_STATUS_SESSION_KEY] = status
+    request.session["user_id"] = user_id
+    response_str = gt.get_response_str()
+    return HttpResponse(response_str)
+
+
+
+
+
+
