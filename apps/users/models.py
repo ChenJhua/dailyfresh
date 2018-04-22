@@ -9,7 +9,7 @@ from utils.models import BaseModel
 
 class User(BaseModel, AbstractUser):
     """用户模型类"""
-    uphone = models.IntegerField()
+    uphone = models.CharField(max_length=11)
 
     def generate_active_token(self):
         """对字典数据{'confirm': 10}加密，返回加密后的结果"""

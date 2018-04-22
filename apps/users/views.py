@@ -1,11 +1,13 @@
 import random
 import re
 
+from django.contrib.auth import authenticate, login, logout
 from django.core.mail import send_mail
 from django.core.signing import SignatureExpired
+from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import View
 from itsdangerous import TimedJSONWebSignatureSerializer
 
@@ -15,6 +17,8 @@ from dailyfresh import settings
 
 import http.client
 import urllib.request
+
+from utils.common import LoginRequireView, LoginRequireMixin
 
 host = "106.ihuyi.com"
 sms_send_uri = "/webservice/sms.php?method=Submit"
@@ -90,6 +94,7 @@ class RegisterView(View):
         code = request.POST.get('code')
         email = request.POST.get('email')
         allow = request.POST.get('allow')  # 用户协议，勾选后得到：on
+        print('手机 验证码', uphone, code, request.session.get('message_code'))
         # todo:检验参数合法性
         # 判断参数不能为空
         if not all([username, password, password2, email, uphone, code]):
@@ -110,12 +115,12 @@ class RegisterView(View):
             return render(request, 'register.html', {'errmsg': "验证码校验错误"})
         # 处理业务：保存用户到数据表中
         # django提供的方法，会对密码进行加密
-        user = None
+        user = User()
         try:
-            user = User.objects.create_user(username, email, password)  # type: User
+            user = User.objects.create_user(username, email, password, uphone=uphone)  # type: User
             # 修改用户状态为未激活
             user.is_active = False
-            user.uphone = uphone
+            # user.uphone = uphone
             user.save()
         except IntegrityError:
             # 判断用户是否存在
@@ -171,11 +176,13 @@ class ActiveView(View):
         return HttpResponse("激活成功，跳转到登录页")
 
 
-def send_message(requset):
-    mobile = requset.GET.get('mobile')
+def send_message(request):
+    """发送信息"""
+    # 获取ajax的get方法发送过来的手机号码
+    mobile = request.GET.get('mobile')
     user = User.objects.filter(uphone=mobile)
-    if len(user)
-    print(mobile)
+    if len(user) == 1:
+        return render(request, 'register.html', {'errmsg': "手机号已注册"})
     message_code = ''
     for i in range(6):
         i = random.randint(0, 9)
@@ -190,10 +197,81 @@ def send_message(requset):
     response = conn.getresponse()
     response_str = response.read()
     conn.close()
-    requset.session['message_code'] = message_code
+    request.session['message_code'] = message_code
     print(eval(response_str.decode()))
 
     return JsonResponse(eval(response_str.decode()))
+
+
+class LoginView(View):
+    def get(self, request):
+        """进入登录界面"""
+        return render(request, 'login.html')
+
+    def post(self, request):
+        """处理登录操作"""
+        # 获取post请求参数
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        remember = request.POST.get('remember')
+        # 检验合法性
+        if not all([username, password]):
+            return render(request, 'login.html', {'errmsg': "用户名和密码不能为空"})
+        # 业务处理：登录
+        user = authenticate(username=username, password=password)
+        if user is None:
+            # 判断用户名和密码是否正确
+            return render(request, 'login.html', {'errmsg': "用户名或密码不正确"})
+        if not user.is_active:
+            # 用户是否激活
+            return render(request, 'login.html', {'errmsg': "用户未激活"})
+
+        # 登录成功， 使用session或保存用户登录状态
+        # request.session['_auth_user_id'] = user.id
+        # 使用django的login方法保存用户登录状态
+        login(request, user)
+
+        if remember == 'on':
+            # 保持登录状态两周
+            request.session.set_expiry(None)
+        else:
+            # 关闭浏览器后，登录状态失效
+            request.session.set_expiry(0)
+        # 响应请求
+        # return redirect('/index')
+        return redirect(reverse('goods:index'))
+
+
+class LoginoutView(View):
+    def get(self, request):
+        """注销"""
+        # 调用django的logout方法，实现退出，会清除登录用户的id(session键值对数据)
+        logout(request)
+        # return redirect('/index')
+        return redirect(reverse('goods:index'))
+
+
+class UserInfoView(View):
+    def get(self, requeset):
+        # 未登录跳到登录页面
+        # if not requeset.user.is_authenticated():
+        #     return redirect(reverse('users:login'))
+
+        context = {'which_page': '1'}
+        return render(requeset, 'user_center_info.html', context)
+
+
+class UserOrderView(View):
+    def get(self, requeset):
+        context = {'which_page': '2'}
+        return render(requeset, 'user_center_order.html', context)
+
+
+class UserAddressView(LoginRequireMixin, View):
+    def get(self, requeset):
+        context = {'which_page': '3'}
+        return render(requeset, 'user_center_site.html', context)
+
 
 
 

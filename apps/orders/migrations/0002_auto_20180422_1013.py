@@ -8,8 +8,8 @@ from django.conf import settings
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0001_initial'),
         ('users', '0001_initial'),
+        ('orders', '0001_initial'),
         ('goods', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -18,21 +18,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='orderinfo',
             name='address',
-            field=models.ForeignKey(verbose_name='收货地址', to='users.Address'),
+            field=models.ForeignKey(to='users.Address', verbose_name='收货地址'),
         ),
         migrations.AddField(
             model_name='orderinfo',
             name='user',
-            field=models.ForeignKey(verbose_name='下单用户', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name='下单用户'),
         ),
         migrations.AddField(
             model_name='ordergoods',
             name='order',
-            field=models.ForeignKey(verbose_name='所属订单', to='orders.OrderInfo'),
+            field=models.ForeignKey(to='orders.OrderInfo', verbose_name='所属订单'),
         ),
         migrations.AddField(
             model_name='ordergoods',
             name='sku',
-            field=models.ForeignKey(verbose_name='订单商品', to='goods.GoodsSKU'),
+            field=models.ForeignKey(to='goods.GoodsSKU', verbose_name='订单商品'),
         ),
     ]

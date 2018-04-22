@@ -134,7 +134,7 @@ $(function(){
 		//发送验证码
 		$.get('/user/send_message', {mobile:$('#mobile').val()}, function(msg) {
 			alert(jQuery.trim(msg.msg));
-			if(msg.msg=='发送成功'){
+			if(msg.msg=='提交成功'){
 				RemainTime();
 			}
 		});

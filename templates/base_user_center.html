@@ -1,0 +1,28 @@
+{# 用户中心三个界面的父模板 #}
+
+{% extends 'base_no_cart.html' %}
+
+{% block title %}
+    天天生鲜-用户中心
+{% endblock %}
+
+{% block page_title %}
+    用户中心
+{% endblock %}
+
+{% block body %}
+    <div class="main_con clearfix">
+        {# 左侧部分 #}
+        <div class="left_menu_con clearfix">
+            <h3>用户中心</h3>
+            <ul>
+                <li><a href="{% url 'users:info' %}" {% if which_page == '1' %}class="active"{% endif %}>· 个人信息</a></li>
+                <li><a href="{% url 'users:orders' %}" {% if which_page == '2' %}class="active"{% endif %}>· 全部订单</a></li>
+                <li><a href="{% url 'users:address' %}" {% if which_page == '3' %}class="active"{% endif %}>· 收货地址</a></li>
+            </ul>
+        </div>
+        {# 右侧部分 #}
+        {% block right_body %}
+        {% endblock %}
+    </div>
+{% endblock %}

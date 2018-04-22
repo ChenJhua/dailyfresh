@@ -21,7 +21,7 @@
 		<div class="r_con fr">
 			<div class="reg_title clearfix">
 				<h1>用户注册</h1>
-				<a href="#">登录</a>
+				<a href="{% url 'users:login' %}">登录</a>
 			</div>
 			<div class="reg_form clearfix">
 				<form action="{% url 'users:register' %}" method="post">
@@ -29,22 +29,22 @@
 				<ul>
 					<li>
 						<label>用户名:</label>
-						<input type="text" name="username" id="user_name">
+						<input type="text" name="username" id="user_name" placeholder="请输入用户名">
 						<span class="error_tip">提示信息</span>
 					</li>					
 					<li>
 						<label>密码:</label>
-						<input type="password" name="password" id="pwd">
+						<input type="password" name="password" id="pwd" placeholder="请输入密码">
 						<span class="error_tip">提示信息</span>
 					</li>
 					<li>
 						<label>确认密码:</label>
-						<input type="password" name="password2" id="cpwd">
+						<input type="password" name="password2" id="cpwd" placeholder="请再次输入密码">
 						<span class="error_tip">提示信息</span>
 					</li>
 					<li>
 						<label>邮箱:</label>
-						<input type="text" name="email" id="email">
+						<input type="text" name="email" id="email" placeholder="请输入邮箱激活">
 						<span class="error_tip">提示信息</span>
 					</li>
 
@@ -64,14 +64,15 @@
 						<label>同意”天天生鲜用户使用协议“</label>
 						<span class="error_tip2">提示信息</span>
 					</li>
+                    {# 提示出错信息 #}
+                    <div style="color: red;height: 20px;margin-top: -10px;">{{ errmsg }}</div>
 
 					<li class="reg_sub">
 						<input type="submit" value="注 册" name="">
 					</li>
 				</ul>				
 				</form>
-                {# 提示出错信息 #}
-                <div style="color: red">{{ errmsg }}</div>
+
 			</div>
 
 		</div>
