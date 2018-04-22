@@ -22,7 +22,8 @@
 					<a href="{% url 'users:register' %}">立即注册</a>
 				</div>
 				<div class="form_input">
-					<form action="/user/login" method="post">
+                    {# 不能指定action="/user/login",否则不能获取next参数 #}
+					<form method="post">
                         {% csrf_token %}
 						<input type="text" name="username" class="name_input" placeholder="请输入用户名">
 						<div class="user_error">输入错误</div>

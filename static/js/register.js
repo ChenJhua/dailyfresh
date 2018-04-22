@@ -141,34 +141,21 @@ $(function(){
 	})
 
 	//按钮倒计时
-	var iTime = 59;
-	var Account;
+	var iTime = 60;
+	sTime = ''
 	function RemainTime(){
-		document.getElementById('zphone').disabled = true;
-		var iSecond,sSecond="",sTime="";
-		if (iTime >= 0){
-			iSecond = parseInt(iTime%60);
-			iMinute = parseInt(iTime/60)
-			if (iSecond >= 0){
-				if(iMinute>0){
-					sSecond = iMinute + "分" + iSecond + "秒";
-				}else{
-					sSecond = iSecond + "秒";
-				}
-			}
-			sTime=sSecond;
-			if(iTime==0){
-				clearTimeout(Account);
-				sTime='获取手机验证码';
-				iTime = 59;
-				document.getElementById('zphone').disabled = false;
-			}else{
-				Account = setTimeout("RemainTime()",1000);
-				iTime=iTime-1;
-			}
+		if (iTime == 0) {
+			document.getElementById('zphone').disabled = false;
+			sTime="获取验证码";
+			iTime = 60;
+			document.getElementById('zphone').value = sTime;
+			return;
 		}else{
-			sTime='没有倒计时';
+			document.getElementById('zphone').disabled = true;
+			sTime="重新发送(" + iTime + ")";
+			iTime--;
 		}
+		setTimeout(function() { RemainTime() },1000)
 		document.getElementById('zphone').value = sTime;
 	}
 

@@ -11,7 +11,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import View
 from itsdangerous import TimedJSONWebSignatureSerializer
 
-from apps.users.models import User
+from apps.users.models import User, Address
 from celery_tasks.tasks import send_active_email
 from dailyfresh import settings
 
@@ -20,6 +20,7 @@ import urllib.request
 
 from utils.common import LoginRequireView, LoginRequireMixin
 
+# 请求的路径
 host = "106.ihuyi.com"
 sms_send_uri = "/webservice/sms.php?method=Submit"
 # 用户名是登录ihuyi.com账号名（例如：cf_demo123）
@@ -111,6 +112,7 @@ class RegisterView(View):
         # 判断手机输入是否正确
         if not re.match('^1[345678]\d{9}$', uphone):
             return render(request, 'register.html', {'errmsg': "手机输入不合法"})
+        # 判断验证码是否正确
         if code != request.session.get('message_code'):
             return render(request, 'register.html', {'errmsg': "验证码校验错误"})
         # 处理业务：保存用户到数据表中
@@ -120,7 +122,6 @@ class RegisterView(View):
             user = User.objects.create_user(username, email, password, uphone=uphone)  # type: User
             # 修改用户状态为未激活
             user.is_active = False
-            # user.uphone = uphone
             user.save()
         except IntegrityError:
             # 判断用户是否存在
@@ -140,10 +141,10 @@ class RegisterView(View):
     def send_active_email(username, email, token):
         """封装发送邮件方法"""
 
-        subject = "天天生鲜用户激活"     # 标题,必须指定
-        message = ""                  # 邮件正文(纯文本)
+        subject = "天天生鲜用户激活"  # 标题,必须指定
+        message = ""  # 邮件正文(纯文本)
         sender = settings.EMAIL_FROM  # 发件人
-        receivers = [email]           # 接收人, 需要是列表
+        receivers = [email]  # 接收人, 需要是列表
         # 邮件正文(带html样式)
         html_message = '<h2>尊敬的 %s, 感谢注册天天生鲜</h2>' \
                        '<p>请点击此链接激活您的帐号: ' \
@@ -155,6 +156,7 @@ class RegisterView(View):
 
 class ActiveView(View):
     """用户激活"""
+
     def get(self, request, token: str):
         """
         用户激活
@@ -177,29 +179,39 @@ class ActiveView(View):
 
 
 def send_message(request):
-    """发送信息"""
+    """发送信息的视图函数"""
     # 获取ajax的get方法发送过来的手机号码
     mobile = request.GET.get('mobile')
+    # 通过手机去查找用户是否已经注册
     user = User.objects.filter(uphone=mobile)
     if len(user) == 1:
-        return render(request, 'register.html', {'errmsg': "手机号已注册"})
+        return JsonResponse({'msg': "该手机已经注册"})
+    # 定义一个字符串,存储生成的6位数验证码
     message_code = ''
     for i in range(6):
         i = random.randint(0, 9)
         message_code += str(i)
-
+    # 拼接成发出的短信
     text = "您的验证码是：" + message_code + "。请不要把验证码泄露给其他人。"
+    # 把请求参数编码
     params = urllib.parse.urlencode(
         {'account': account, 'password': password, 'content': text, 'mobile': mobile, 'format': 'json'})
+    # 请求头
     headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+    # 通过全局的host去连接服务器
     conn = http.client.HTTPConnection(host, port=80, timeout=30)
+    # 向连接后的服务器发送post请求,路径sms_send_uri是全局变量,参数,请求头
     conn.request("POST", sms_send_uri, params, headers)
+    # 得到服务器的响应
     response = conn.getresponse()
+    # 获取响应的数据
     response_str = response.read()
+    # 关闭连接
     conn.close()
+    # 把验证码放进session中
     request.session['message_code'] = message_code
     print(eval(response_str.decode()))
-
+    # 使用eval把字符串转为json数据返回
     return JsonResponse(eval(response_str.decode()))
 
 
@@ -237,9 +249,17 @@ class LoginView(View):
         else:
             # 关闭浏览器后，登录状态失效
             request.session.set_expiry(0)
-        # 响应请求
-        # return redirect('/index')
-        return redirect(reverse('goods:index'))
+
+        # 登录成功后,要跳转到next指向的页面
+        next = request.GET.get('next')
+        if next:
+            # 不为空则跳转到next指向的页面
+            return redirect(next)
+        else:
+            # 为空,则默认跳转到首页
+            # 响应请求
+            # return redirect('/index')
+            return redirect(reverse('goods:index'))
 
 
 class LoginoutView(View):
@@ -257,7 +277,14 @@ class UserInfoView(View):
         # if not requeset.user.is_authenticated():
         #     return redirect(reverse('users:login'))
 
-        context = {'which_page': '1'}
+        # 查询最新的地址显示
+        try:
+            # 查询登录用户最新添加的地址,并显示出来
+            # address = Address.objects.filter(user=requeset.user).order_by('create_time]')[0]
+            address = requeset.user.address_set.latest('create_time')
+        except Exception:
+            address = None
+        context = {'address': address, 'which_page': '1'}
         return render(requeset, 'user_center_info.html', context)
 
 
@@ -269,13 +296,40 @@ class UserOrderView(View):
 
 class UserAddressView(LoginRequireMixin, View):
     def get(self, requeset):
-        context = {'which_page': '3'}
+        # 查询登录用户最新添加的地址,并显示出来
+        user = requeset.user
+        try:
+            # 查询登录用户最新添加的地址,并显示出来
+            # address = Address.objects.filter(user=requeset.user).order_by('create_time]')[0]
+            address = user.address_set.latest('create_time')
+        except Exception:
+            address = None
+
+        context = {
+            'address': address,
+            'which_page': '3',
+        }
         return render(requeset, 'user_center_site.html', context)
 
+    def post(self, request):
+        # 获取参数
+        receiver = request.POST.get('receiver')
+        detail = request.POST.get('detail')
+        zip_code = request.POST.get('zip_code')
+        mobile = request.POST.get('mobile')
 
+        # 判断是否为空
+        if not all([receiver, detail, zip_code, mobile]):
+            return render(request, 'user_center_site.html', {'errmsg': "参数不能为空"})
 
+        # 新增一个地址
+        Address.objects.create(
+            receiver_name=receiver,
+            detail_addr=detail,
+            receiver_mobile=mobile,
+            zip_code=zip_code,
+            user=request.user,
+        )
 
-
-
-
-
+        # 添加成功后,回到当前页面,刷新数据
+        return redirect(reverse('users:address'))

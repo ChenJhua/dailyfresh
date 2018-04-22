@@ -9,6 +9,8 @@ from utils.models import BaseModel
 
 class User(BaseModel, AbstractUser):
     """用户模型类"""
+    # 不要定义int型,否则存不进数据库,会报错,Out of range
+    # 建议使用char类型
     uphone = models.CharField(max_length=11)
 
     def generate_active_token(self):
