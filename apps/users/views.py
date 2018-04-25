@@ -10,8 +10,10 @@ from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import View
+from django_redis import get_redis_connection
 from itsdangerous import TimedJSONWebSignatureSerializer
 
+from apps.goods.models import GoodsSKU
 from apps.users.models import User, Address
 from celery_tasks.tasks import send_active_email
 from dailyfresh import settings
@@ -279,11 +281,30 @@ class LoginoutView(View):
         return redirect(reverse('goods:index'))
 
 
-class UserInfoView(View):
+class UserInfoView(LoginRequireMixin, View):
     def get(self, requeset):
         # 未登录跳到登录页面
         # if not requeset.user.is_authenticated():
         #     return redirect(reverse('users:login'))
+
+        # todo:从Redis中读取当前登录用户浏览过的商品
+        # 返回一个StrictRedis
+        # strict_redis = get_redis_connection('default')
+        strict_redis = get_redis_connection()  # type:StrictRedis
+        # 读取所有的商品id,返回一个列表
+        # history_id = [商品id1,商品id2,商品id3]
+        key = 'history_%s' % requeset.user.id
+        # 最多只取出5个商品id
+        sku_ids = strict_redis.lrange(key, 0, 4)
+        print(sku_ids)
+        # 顺序问题:根据商品id,查询出商品对象
+        # 这行会影响添加进去的顺序
+        # skus = GoodsSKU.objects.filter(id__in=sku_ids)
+        # 解决:
+        skus = []  # 用来保存查询出来的商品对象
+        for sku_id in sku_ids:  # sku_id　byte
+            sku = GoodsSKU.objects.get(id=sku_id)
+            skus.append(sku)
 
         # 查询最新的地址显示
         try:
@@ -292,11 +313,15 @@ class UserInfoView(View):
             address = requeset.user.address_set.latest('create_time')
         except Exception:
             address = None
-        context = {'address': address, 'which_page': '1'}
+        context = {
+            'address': address,
+            'which_page': '1',
+            'skus': skus,
+        }
         return render(requeset, 'user_center_info.html', context)
 
 
-class UserOrderView(View):
+class UserOrderView(LoginRequireMixin, View):
     def get(self, requeset):
         context = {'which_page': '2'}
         return render(requeset, 'user_center_order.html', context)

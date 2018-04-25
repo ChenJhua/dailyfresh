@@ -26,4 +26,6 @@ urlpatterns = [
     url(r'^cart/', include('apps.cart.urls', namespace='cart')),
     url(r'^order/', include('apps.orders.urls', namespace='orders')),
     url(r'^', include('apps.goods.urls', namespace='goods')),
+    # 第三方登录
+    # url(r'^social/', include('social_django.urls', namespace='social')),
 ]

@@ -13,10 +13,9 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-from django.conf.global_settings import STATICFILES_DIRS, AUTH_USER_MODEL
+from django.conf.global_settings import STATICFILES_DIRS, AUTH_USER_MODEL, DEFAULT_FILE_STORAGE
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -28,7 +27,6 @@ SECRET_KEY = 'p%1lc2v9=7jt-iip%pf2__krb76hpn7ak$u*0f2%p9*lr4ap=p'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 AUTH_USER_MODEL = 'users.User'
@@ -46,6 +44,7 @@ INSTALLED_APPS = (
     'apps.goods',  # 商品模块
     # 'utils',  # 解决模型类继承问题方法一
     'tinymce',  # 使用富文本编辑器
+    # 'social_django',  # 第三方登录
 )
 
 MIDDLEWARE_CLASSES = (
@@ -73,13 +72,15 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # # 第三方登录
+                # 'social_django.context_processors.backends',
+                # 'social_django.context_processors.login_redirect',
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'dailyfresh.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
@@ -95,7 +96,6 @@ DATABASES = {
     }
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
@@ -108,7 +108,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -126,22 +125,21 @@ TINYMCE_DEFAULT_CONFIG = {
 }
 
 # 邮件发送配置
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    # 导入邮件模块
-EMAIL_HOST = 'smtp.163.com'                 # 邮箱服务器地址（不同公司的邮箱服务器地址不一样）
-EMAIL_PORT = 25                             # 邮箱服务器端口（默认都为25）
-EMAIL_HOST_USER = 'chencjhua@163.com'       # 发件人（天天生鲜官方邮箱账号）
-EMAIL_HOST_PASSWORD = 'python123'           # 邮箱客户端授权码，非邮箱登录密码
-EMAIL_FROM = '天天生鲜<chencjhua@163.com>'   # 收件人接收到邮件后，显示在‘发件人’中的内容，如下图
-
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 导入邮件模块
+EMAIL_HOST = 'smtp.163.com'  # 邮箱服务器地址（不同公司的邮箱服务器地址不一样）
+EMAIL_PORT = 25  # 邮箱服务器端口（默认都为25）
+EMAIL_HOST_USER = 'chencjhua@163.com'  # 发件人（天天生鲜官方邮箱账号）
+EMAIL_HOST_PASSWORD = 'python123'  # 邮箱客户端授权码，非邮箱登录密码
+EMAIL_FROM = '天天生鲜<chencjhua@163.com>'  # 收件人接收到邮件后，显示在‘发件人’中的内容，如下图
 
 # django项目的缓存配置
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/3",
+        "LOCATION": "redis://127.0.0.1:6379/2",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PASSWORD": ""
+            "PASSWORD": ""  # Redis密码，默认为空
         }
     }
 }
@@ -152,5 +150,27 @@ SESSION_CACHE_ALIAS = "default"
 
 LOGIN_URL = '/user/login'
 
+# 指定使用自定义的文件存储类
+DEFAULT_FILE_STORAGE = 'utils.fdfs.storage.FdfsStorage'
 
-
+# # 第三方登录
+# AUTHENTICATION_BACKENDS = (
+#     # 第三方认证登录配置，微博、微信、QQ
+#     'social_core.backends.weibo.WeiboOAuth2',           # 使用微博登录
+#     'social_core.backends.weixin.WeixinOAuth2',         # 使用微信登录
+#     'social_core.backends.qq.QQOAuth2',                 # 使用QQ登录
+#     'django.contrib.auth.backends.ModelBackend',        # 指定django的ModelBackend类
+# )
+#
+# # 第三方登录设置appkey和secret，根据开发平台的不同而不同
+# SOCIAL_AUTH_WEIBO_KEY = '2025534668'  # 微博
+# SOCIAL_AUTH_TWITTER_SECRET = 'cdb92356d8bf2ed866861f94103c12a3'  # 微博
+#
+# SOCIAL_AUTH_QQ_KEY = 'foobar'  # QQ
+# SOCIAL_AUTH_QQ_SECRET = 'bazqux'  # QQ
+#
+# SOCIAL_AUTH_WEIXIN_KEY = 'foobar'  # 微信
+# SOCIAL_AUTH_WEIXIN_SECRET = 'bazqux'  # 微信
+#
+# # 第三方登录成功后跳转页面,这里跳转的主页
+# SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/index'
