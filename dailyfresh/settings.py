@@ -99,7 +99,7 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'zh-hans'
+LANGUAGE_CODE = 'zh-Hans'
 
 TIME_ZONE = 'Asia/Shanghai'
 
@@ -174,3 +174,6 @@ DEFAULT_FILE_STORAGE = 'utils.fdfs.storage.FdfsStorage'
 #
 # # 第三方登录成功后跳转页面,这里跳转的主页
 # SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/index'
+
+
+

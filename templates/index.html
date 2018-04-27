@@ -33,7 +33,7 @@
             <ul class="slide_pics">
                 {# 显示轮播图 #}
                 {% for slide_sku in slide_skus %}
-                    <li><img src="{{ slide_sku.image.url }}" alt="幻灯片"></li>
+                    <li><a href="{% url 'goods:detail' slide_sku.sku.id %}"><img src="{{ slide_sku.image.url }}" alt="幻灯片"></a></li>
                 {% endfor %}
             </ul>
             <div class="prev"></div>
@@ -56,7 +56,7 @@
                     <span>|</span>
                     {# 显示类别文字商品 #}
                     {% for c_sku in c.text_skus %}
-                        <a href="{{ c_sku.sku.id }}">{{ c_sku.sku.name }}</a>
+                        <a href="{% url 'goods:detail' c_sku.sku.id %}">{{ c_sku.sku.name }}</a>
                     {% endfor %}
                 </div>
                 <a href="#" class="goods_more fr" id="fruit_more">查看更多 ></a>
@@ -67,8 +67,8 @@
                 <ul class="goods_list fl">
                     {% for img_sku in c.image_skus %}
                         <li>
-                            <h4><a href="#">{{ img_sku.sku.name }}</a></h4>
-                            <a href="#"><img src="{{ img_sku.sku.default_image.url }}"></a>
+                            <h4><a href="{% url 'goods:detail' img_sku.sku.id %}">{{ img_sku.sku.name }}</a></h4>
+                            <a href="{% url 'goods:detail' img_sku.sku.id %}"><img src="{{ img_sku.sku.default_image.url }}"></a>
                             <div class="prize">¥ {{ img_sku.sku.price }}</div>
                         </li>
                     {% endfor %}

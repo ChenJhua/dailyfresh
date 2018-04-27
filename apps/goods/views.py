@@ -1,10 +1,12 @@
+from django.core.cache import cache
+from django.core.urlresolvers import reverse
 from django.http.response import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import View
 from django_redis import get_redis_connection
 from redis import StrictRedis
 
-from apps.goods.models import GoodsCategory, IndexSlideGoods, IndexPromotion, IndexCategoryGoods
+from apps.goods.models import GoodsCategory, IndexSlideGoods, IndexPromotion, IndexCategoryGoods, GoodsSKU
 from apps.users.models import User
 
 
@@ -41,30 +43,96 @@ class IndexView(BaseCartView):
         return render(request, 'index.html')
 
     def get(self, request):
-        # 查询首页商品数据:商品类别/轮播图/促销活动
-        categories = GoodsCategory.objects.all()
-        slide_skus = IndexSlideGoods.objects.all().order_by('index')
-        promotions = IndexPromotion.objects.all().order_by('index')[0:2]
+        # 读取Redis中的缓存数据
+        context = cache.get('index_page_data')
+        if not context:
+            print('没有缓存,从mysql数据库中读取')
+            # 查询首页商品数据:商品类别/轮播图/促销活动
+            categories = GoodsCategory.objects.all()
+            slide_skus = IndexSlideGoods.objects.all().order_by('index')
+            promotions = IndexPromotion.objects.all().order_by('index')[0:2]
 
-        for category in categories:
-            # 查询当前类型所有的文字商品和图片商品
-            text_skus = IndexCategoryGoods.objects.filter(display_type=0, category=category)
-            image_skus = IndexCategoryGoods.objects.filter(display_type=1, category=category)[0:4]
+            for category in categories:
+                # 查询当前类型所有的文字商品和图片商品
+                text_skus = IndexCategoryGoods.objects.filter(display_type=0, category=category)
+                image_skus = IndexCategoryGoods.objects.filter(display_type=1, category=category)[0:4]
 
-            # 动态给对象新增实例属性
-            category.text_skus = text_skus
-            category.image_skus = image_skus
+                # 动态给对象新增实例属性
+                category.text_skus = text_skus
+                category.image_skus = image_skus
+
+            # 定义要缓存的数据:字典
+            context = {
+                'categories': categories,
+                'slide_skus': slide_skus,
+                'promotions': promotions,
+            }
+            # 缓存数据:保存数据到Redis中
+            # 参数1:键名
+            # 参数2:要缓存的数据(字典)
+            # 参数3:缓存时间:半个小时
+            cache.set('index_page_data', context, 60*30)
+        else:
+            print('使用缓存')
 
         # 获取用户添加到购物车商品的总数量
         cart_count = self.get_cart_count(request)
+        # 给字典新增一个键值
+        # context.update({'cart_count': cart_count})
+        context['cart_count'] = cart_count
 
-        # 定义模板显示的数据
-        context = {
-            'categories': categories,
-            'slide_skus': slide_skus,
-            'promotions': promotions,
-            'cart_count': cart_count,
-        }
         return render(request, 'index.html', context)
+
+
+class DetailView(BaseCartView):
+    def get(self, request, sku_id):
+        """
+        显示商品详情界面
+        :param request:
+        :param sku_id: 商品id
+        :return:
+        """
+        # todo:查询数据库数据
+        # 查询商品SKU信息
+        try:
+            sku = GoodsSKU.objects.get(id=sku_id)
+        except GoodsSKU.DoesNotExist:
+            # 没有查询到商品跳转到首页
+            return redirect(reverse('goods:index'))
+        # 查询所有商品分类信息
+        categories = GoodsCategory.objects.all()
+        # 查询最新商品推荐  只查询两条
+        try:
+            new_skus = GoodsSKU.objects.filter(category=sku.category).order_by('-create_time')[0:2]
+        except:
+            new_skus = None
+        # 如果已登录，查询购物车信息
+        cart_count = self.get_cart_count(request)
+        # todo:查询其他规格商品
+        other_skus = GoodsSKU.objects.filter(spu=sku.spu).exclude(id=sku_id)
+
+        # todo:保存用户浏览的商品到redis中
+        if request.user.is_authenticated():
+            # 获取StrictRedis对象
+            strict_redis = get_redis_connection()  # type:StrictRedis
+            # history_1 = [3, 1, 2]
+            key = 'history_%s' % request.user.id
+            # 删除list中已存在的商品id
+            strict_redis.lrem(key, 0, sku_id)
+            # 添加商品id到list的左侧
+            strict_redis.lpush(key, sku_id)
+            # 控制元素的个数:最多只保存5个商品记录
+            strict_redis.ltrim(key, 0, 4)
+
+        context = {
+            'sku': sku,
+            'categories': categories,
+            'new_skus': new_skus,
+            'cart_count': cart_count,
+            'other_skus': other_skus,
+        }
+
+        return render(request, 'detail.html', context)
+
 
 
