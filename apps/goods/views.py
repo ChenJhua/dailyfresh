@@ -8,6 +8,7 @@ from django_redis import get_redis_connection
 from redis import StrictRedis
 
 from apps.goods.models import GoodsCategory, IndexSlideGoods, IndexPromotion, IndexCategoryGoods, GoodsSKU
+from apps.orders.models import OrderGoods
 from apps.users.models import User
 
 
@@ -125,12 +126,16 @@ class DetailView(BaseCartView):
             # 控制元素的个数:最多只保存5个商品记录
             strict_redis.ltrim(key, 0, 4)
 
+        # 获取商品的评论信息
+        order_skus = OrderGoods.objects.filter(sku=sku).exclude(comment='')
+
         context = {
             'sku': sku,
             'categories': categories,
             'new_skus': new_skus,
             'cart_count': cart_count,
             'other_skus': other_skus,
+            'order_skus': order_skus,
         }
 
         return render(request, 'detail.html', context)

@@ -100,14 +100,25 @@
 
         <div class="r_wrap fr clearfix">
             <ul class="detail_tab clearfix">
-                <li class="active">商品介绍</li>
-                <li>评论</li>
+                <li class="active" id="li_detail">商品介绍</li>
+                <li id="li_comment">评论</li>
             </ul>
 
-            <div class="tab_content">
+            <div class="tab_content" id="div_detail">
                 <dl>
                     <dt>商品详情：</dt>
                     <dd>{{ sku.spu.desc|safe }}</dd>
+                </dl>
+            </div>
+
+            <div class="tab_content" id="div_comment">
+                <dl>
+                    <dt>评论：</dt>
+                    {% for order_sku in order_skus %}
+                    <br/>
+                    <dd>时间:{{ order_sku.create_time }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用户:{{ order_sku.order.user.username }}<br/>
+                        评论：{{ order_sku.comment }}</dd>
+                    {% endfor %}
                 </dl>
             </div>
 
@@ -228,5 +239,25 @@
             $('.num_show').val(parseInt(count));
             update_goods_info();
         });
+
+         // 切换商品详情/评论模块
+         // 进入详情界面时,隐藏评论的显示
+         $('#div_comment').hide();
+
+         // 点击'评论'时, 高亮显示'评论'标签
+         $('#li_comment').click(function () {
+             $('#li_detail').removeClass('active'); // 删除class
+             $('#li_comment').addClass('active');   // 添加class
+             $('#div_detail').hide();
+             $('#div_comment').show();
+         });
+
+         // 点击'商品介绍'时, 高亮显示'商品介绍'标签
+         $('#li_detail').click(function () {
+             $('#li_detail').addClass('active');     // 删除class
+             $('#li_comment').removeClass('active'); // 添加class
+             $('#div_detail').show();
+             $('#div_comment').hide();
+         });
     </script>
 {% endblock %}

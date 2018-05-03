@@ -25,7 +25,7 @@
                             </td>
 							<td width="15%">{{ order.total_pay }}元</td>
 							<td width="15%">{{ order.status_desc }}</td>
-							<td width="15%"><a href="#" class="oper_btn">去付款</a></td>
+							<td width="15%"><a href="#" class="oper_btn" status="{{ order.status }}" order_id="{{ order.order_id }}">{{ order.status_desc }}</a></td>
 						</tr>
 					</tbody>
 				</table>
@@ -42,4 +42,50 @@
                     {% endif %}
 				</div>
 		</div>
+{% endblock %}
+
+{% block bottom_js %}
+    {% csrf_token %}
+    <script type="text/javascript">
+        // 设置按钮<去支付>点击事件
+        $('.oper_btn').click(function () {
+            // 获取请求参数
+            var status = $(this).attr('status');
+            var order_id = $(this).attr('order_id');
+            var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+
+            if(status == 1){ // 为支付
+                var params = {
+                    order_id:order_id,
+                    csrfmiddlewaretoken:csrf,
+                };
+
+                $.post('/order/pay', params, function (data) {
+                    if(data.code == 0){  // 获取支付引导界面url地址成功
+                        // 打开一个新的窗口，显示支付引导界面
+                        window.open(data.url);
+                        // todo：调用接口，查询是否支付成功
+                        $.post('/order/check', params, function (data) {
+                            if(data.code == 0){
+                                //支付成功
+                                alert('支付成功！');
+                                // 重新刷新当前订单列表页面
+                                window.location.reload();
+                            }else{
+                                // 支付失败
+                                alert('订单支付失败');
+                            }
+                        })
+                    }else{
+                        // 获取支付引导界面url地址失败
+                        alert(data.errmsg);
+                    }
+                })
+            }
+            else if (status == 4){
+                // 等于4则跳转到评价页面，把订单id带过去
+                window.location.href = '/order/comment/'+order_id
+            }
+        })
+    </script>
 {% endblock %}
