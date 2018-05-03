@@ -4,6 +4,7 @@ import re
 
 from django.contrib.auth import authenticate, login, logout
 from django.core.mail import send_mail
+from django.core.paginator import Paginator, EmptyPage
 from django.core.signing import SignatureExpired
 from django.core.urlresolvers import reverse
 from django.db import IntegrityError
@@ -14,6 +15,7 @@ from django_redis import get_redis_connection
 from itsdangerous import TimedJSONWebSignatureSerializer
 
 from apps.goods.models import GoodsSKU
+from apps.orders.models import OrderInfo, OrderGoods
 from apps.users.models import User, Address
 from celery_tasks.tasks import send_active_email
 from dailyfresh import settings
@@ -25,7 +27,7 @@ from utils.common import LoginRequireView, LoginRequireMixin
 from geetest import GeetestLib  # 极验验证
 
 
-# 请在官网申请ID使用，示例ID不可使用
+# 极验验证,请在官网申请ID使用，示例ID不可使用
 pc_geetest_id = "9107cbe379daa19cd93b9250f36ba301"  # id
 pc_geetest_key = "73dd706e795ba4e67bad328cf6e68970"  # key
 
@@ -264,6 +266,9 @@ class LoginView(View):
         next = request.GET.get('next')
         if next:
             # 不为空则跳转到next指向的页面
+            # 如果要进入的是确认订单页面，则登录成功后，跳转到购物车界面即可
+            if next == '/orders/place':
+                next = '/cart'
             return redirect(next)
         else:
             # 为空,则默认跳转到首页
@@ -322,8 +327,41 @@ class UserInfoView(LoginRequireMixin, View):
 
 
 class UserOrderView(LoginRequireMixin, View):
-    def get(self, requeset):
-        context = {'which_page': '2'}
+    def get(self, requeset, page_no):
+        # 查询当前登录用户所有的订单
+        orders = OrderInfo.objects.filter(user=requeset.user).order_by('-create_time')
+
+        # 遍历该用户所有订单
+        for order in orders:
+            # 查询某个订单下所有的商品
+            order_skus = OrderGoods.objects.filter(order=order)
+            for order_sku in order_skus:
+                # 循环每一个订单商品，计算小计金额
+                order_sku.amount = order_sku.price * order_sku.count
+
+            # 增加三个实例属性
+            # 订单状态
+            order.status_desc = OrderInfo.ORDER_STATUS.get(order.status)
+            # 实付金额
+            order.total_pay = order.trans_cost + order.total_amount
+
+            # 订单商品
+            order.order_skus = order_skus
+
+        # 创建分页对象
+        paginator = Paginator(orders, 2)
+        # 参数2：每页显示两条
+        try:
+            page = paginator.page(page_no)
+        except EmptyPage:  # 没有获取分页
+            page = paginator.page(1)
+
+        context = {
+            'which_page': '2',
+            'orders': orders,
+            'page': page,
+            'page_range': paginator.page_range,
+        }
         return render(requeset, 'user_center_order.html', context)
 
 

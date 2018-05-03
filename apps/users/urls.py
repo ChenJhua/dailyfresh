@@ -14,7 +14,8 @@ urlpatterns = [
     url(r'^send_message$', views.send_message, name='send_message'),
     url(r'^login$', views.LoginView.as_view(), name='login'),
     url(r'^login_out$', views.LoginoutView.as_view(), name='login_out'),
-    url(r'^orders$', views.UserOrderView.as_view(), name='orders'),
+    # 增加页码
+    url(r'^orders/(\d+)$', views.UserOrderView.as_view(), name='orders'),
     url(r'^address$', views.UserAddressView.as_view(), name='address'),
     # url(r'^address$', login_required(views.UserAddressView.as_view()), name='address'),
     url(r'^$', views.UserInfoView.as_view(), name='info'),

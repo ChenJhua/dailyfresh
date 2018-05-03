@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     # 'utils',  # 解决模型类继承问题方法一
     'tinymce',  # 使用富文本编辑器
     # 'social_django',  # 第三方登录
+    'haystack',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -107,7 +108,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -174,6 +175,26 @@ DEFAULT_FILE_STORAGE = 'utils.fdfs.storage.FdfsStorage'
 #
 # # 第三方登录成功后跳转页面,这里跳转的主页
 # SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/index'
+
+# 配置haystack框架
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        # # 使用whoosh搜索引擎
+        # 'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+
+        # 使用whoosh搜索引擎(使用jiebar中文分词工具)
+        'ENGINE': 'haystack.backends.whoosh_cn_backend.WhooshEngine',
+
+        # 指定生成的索引库保存在哪个目录下
+        'PATH': os.path.join(BASE_DIR, 'whoosh_index'),
+    }
+}
+
+# 当添加、修改、删除了数据时，自动生成索引
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+
+# 设置全文检索结果每页显示2条数据
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 2
 
 
 

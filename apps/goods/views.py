@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.core.paginator import Paginator, EmptyPage
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponse
 from django.shortcuts import render, redirect
@@ -134,5 +135,71 @@ class DetailView(BaseCartView):
 
         return render(request, 'detail.html', context)
 
+
+class ListView(BaseCartView):
+    """商品列表详情页"""
+    def get(self, request, category_id, page_num):
+        """
+        显示商品列表页面
+        :param request:
+        :param category_id: 类别id
+        :param page_num: 页码
+        :return:
+        """
+        # 获取请求参数
+        sort = request.GET.get('sort')
+        # 校验参数合法性
+        try:
+            category = GoodsCategory.objects.get(id=category_id)
+        except GoodsCategory.DoesNotExist:
+            return redirect(reverse('goods:index'))
+
+        # 业务:查询对应的商品数据
+
+        # 商品分类信息
+        categories = GoodsCategory.objects.all()
+
+        # 新品推荐信息（在GoodsSKU表中，查询特定类别信息，按照时间倒序）
+        try:
+            new_skus = GoodsSKU.objects.filter(category=category).order_by('-create_time')[0:2]
+        except:
+            new_skus = None
+        # 该类别下商品列表信息
+        if sort == 'price':
+            # 价格升序排
+            skus = GoodsSKU.objects.filter(category=category).order_by('price')
+        elif sort == 'hot':
+            # 销量降序排
+            skus = GoodsSKU.objects.filter(category=category).order_by('-sales')
+        else:
+            # 默认id升序排
+            skus = GoodsSKU.objects.filter(category=category)
+            sort = 'default'
+
+        # todo:商品分页信息
+        # 参数１：要分页的数据
+        # 参数２：每页显示多少条
+        paginator = Paginator(skus, 2)
+        try:
+            page = paginator.page(page_num)
+        except EmptyPage:  # 页码出错
+            # 出错默认显示第一页
+            page = paginator.page(1)
+
+        # 购物车信息
+        cart_count = self.get_cart_count(request)
+        # 响应请求
+        context = {
+            "category": category,
+            "categories": categories,
+            "new_skus": new_skus,
+            # "skus": skus,
+            "sort": sort,
+            "cart_count": cart_count,
+            "page": page,
+            "page_range": paginator.page_range,
+
+        }
+        return render(request, 'list.html', context)
 
 

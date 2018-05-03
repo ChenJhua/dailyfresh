@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>天天生鲜-用户中心</title>
+
+	<link rel="stylesheet" type="text/css" href="css/reset.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+
+
+<div class="header_con">
+    <div class="header">
+        <div class="welcome fl">欢迎来到天天生鲜!</div>
+        <div class="fr">
+
+            <div class="login_btn fl">
+                欢迎您：<em>admin</em>
+                <span>|</span>
+                <a href="/user/logout">退出</a>
+            </div>
+
+            <div class="user_link fl">
+                <span>|</span>
+                <a href="/user">用户中心</a>
+                <span>|</span>
+                <a href="/cart/">我的购物车</a>
+                <span>|</span>
+                <a href="/user/order/1">我的订单</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="search_bar clearfix">
+    <a href="../templates/index.html" class="logo fl"><img src="images/logo.png"></a>
+    <div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;用户中心</div>
+    <div class="search_con fr">
+        <input type="text" class="input_text fl" name="" placeholder="搜索商品">
+        <input type="button" class="input_btn fr" name="" value="搜索">
+    </div>
+</div>
+
+<div class="main_con clearfix">
+
+    <div class="left_menu_con clearfix">
+        <h3>用户中心</h3>
+        <ul>
+            <li><a href="#">· 个人信息</a></li>
+            <li><a href="#">· 全部订单</a></li>
+            <li><a href="#">· 收货地址</a></li>
+        </ul>
+    </div>
+
+    <div class="right_content clearfix">
+        <h3 class="common_title2">订单评价</h3>
+        <ul class="order_list_th w978 clearfix">
+            <li class="col01">2018年2月28日 16:50</li>
+            <li class="col02">订单号：2018022816500319</li>
+            <li class="col02 stress">待评价</li>
+        </ul>
+
+        <form method="post">
+            <input type="hidden" name="order_id" value="2018022816500319">
+            <input type="hidden" name="total_count" value="2">
+
+            <table class="order_list_table w980">
+                <tbody>
+                <tr>
+                    <td width="80%">
+                        <ul class="order_goods_list clearfix">
+                            <li class="col01"><img src="images/goods/goods003.jpg">
+                            </li>
+                            <li class="col02">草莓 500g<em>单价:10.00/500g</em></li>
+                            <li class="col03">购买数量: 1</li>
+                        </ul>
+                    </td>
+                    <td width="20%">小计: 10.00元</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="site_con">
+                <input type="hidden" name="sku_1" value="1">
+                <div class="form_group form_group2">
+                    <label>评价内容：</label>
+                    <textarea class="site_area" name="content_1"></textarea>
+                </div>
+            </div>
+
+            <table class="order_list_table w980">
+                <tbody>
+                <tr>
+                    <td width="80%">
+                        <ul class="order_goods_list clearfix">
+                            <li class="col01"><img src="images/goods/goods003.jpg">
+                            </li>
+                            <li class="col02">盒装草莓<em>单价:20.00/盒</em></li>
+                            <li class="col03">购买数量: 1</li>
+                        </ul>
+                    </td>
+                    <td width="20%">小计: 10.00元</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="site_con">
+                <input type="hidden" name="sku_2" value="2">
+                <div class="form_group form_group2">
+                    <label>评价内容：</label>
+                    <textarea class="site_area" name="content_1"></textarea>
+                </div>
+            </div>
+
+            <input type="submit" name="" value="提交" class="info_submit">
+        </form>
+
+    </div>
+</div>
+
+<div class="footer">
+    <div class="foot_link">
+        <a href="#">关于我们</a>
+        <span>|</span>
+        <a href="#">联系我们</a>
+        <span>|</span>
+        <a href="#">招聘人才</a>
+        <span>|</span>
+        <a href="#">友情链接</a>
+    </div>
+    <p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
+    <p>电话：010-****888 京ICP备*******8号</p>
+</div>
+
+</body>
+</html>

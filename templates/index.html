@@ -59,7 +59,7 @@
                         <a href="{% url 'goods:detail' c_sku.sku.id %}">{{ c_sku.sku.name }}</a>
                     {% endfor %}
                 </div>
-                <a href="#" class="goods_more fr" id="fruit_more">查看更多 ></a>
+                <a href="{% url 'goods:list' c.id 1 %}?sort=default" class="goods_more fr" id="fruit_more">查看更多 ></a>
             </div>
 
             <div class="goods_con clearfix">
@@ -80,22 +80,5 @@
 {% endblock %}
 
 {% block bottom_js %}
-
-    <script type="text/javascript" src="js/slideshow.js"></script>
-    <script type="text/javascript">
-        BCSlideshow('focuspic');
-        var oFruit = document.getElementById('fruit_more');
-        var oShownum = document.getElementById('show_count');
-
-        var hasorder = localStorage.getItem('order_finish');
-
-        if (hasorder) {
-            oShownum.innerHTML = '2';
-        }
-
-        oFruit.onclick = function () {
-            window.location.href = 'list.html';
-        }
-    </script>
 
 {% endblock %}

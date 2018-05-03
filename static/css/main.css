@@ -214,7 +214,7 @@ html,body{height:100%}
 .operate{width:160px;margin:10px auto;position:relative;}
 .goods_type_list .operate .prize{color:#da260e; font-size:14px;} 
 .goods_type_list .operate .unit{color:#999;padding-left:5px;}
-.goods_type_list .operate .add_goods{display:inline-block;width:15px;height:15px;background:url(../images/shop_cart.png);position:absolute;right:0;top:3px;}
+.goods_type_list .operate .add_goods{display:inline-block;width:15px;height:15px;background:url(../images/shop_cart.png);position:absolute;right:0;top:3px;border: 0px;outline:none;}
 
 
 /* 分页样式 */
@@ -234,6 +234,7 @@ html,body{height:100%}
 }
 
 .goods_detail_pic{width:350px;height:350px;margin:24px 0 0 24px;}
+.goods_detail_pic img{width:350px;height:350px;}
 .goods_detail_list{
 	width:730px;height:350px;margin:24px 24px 0 0;
 }
@@ -388,7 +389,8 @@ html,body{height:100%}
 .settlements .col03 b{color:#ff0000;font-size:14px;padding:0 5px;}
 
 .settlements .col04{width:14%;text-align:center;float:right;}
-.settlements .col04 a{display:block;height:78px;background-color:#ff3d3d;text-align:center;line-height:78px;color:#fff;font-size:24px}
+.settlements .col04 input{display:block;height:78px;background-color:#ff3d3d;text-align:center;line-height:78px;color:#fff;font-size:24px;width:168px;border: 0px;outline:none;}
+.settlements .col04 a{display:block;height:78px;background-color:#ff3d3d;text-align:center;line-height:78px;color:#fff;font-size:24px;}
 
 
 .common_title{width:1200px;margin:20px auto 0;font-size:14px;}

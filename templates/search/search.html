@@ -1,0 +1,97 @@
+{% extends 'base_no_cart.html' %}
+
+{% block title %}
+    天天生鲜-搜索结果
+{% endblock %}
+
+{% block body %}
+
+    <div class="breadcrumb">
+        搜索结果(共{{ paginator.count }}条)
+        <span>></span>
+        {{ query }}
+    </div>
+
+    <div class="main_wrap clearfix">
+        <div class="r_wrap fr clearfix">
+
+            <ul class="goods_type_list clearfix">
+                {# 显示搜索到的商品 #}
+                {% for result in page %}
+                        {% csrf_token %}
+                        <input type="hidden" value="{{ result.object.id }}" name="sku_id">
+                        <input type="hidden" value="1" name="count">
+                        <li>
+                            <a href="{% url 'goods:detail' result.object.id %}"><img
+                                    src="{{ result.object.default_image.url }}"></a>
+                            <h4><a href="{% url 'goods:detail' result.object.id %}">{{ result.object.name }}</a></h4>
+                            <div class="operate">
+                                <span class="prize">￥{{ result.object.price }}</span>
+                                <span class="unit">{{ result.object.price }}/{{ result.object.unit }}</span>
+                                <a href="#" class="add_goods" title="加入购物车"></a>
+                            </div>
+                        </li>
+                {% endfor %}
+            </ul>
+
+            <div class="pagenation">
+                {% if page.has_previous %}
+                    <a href="/search?q={{ query }}&page={{ page.previous_page_number }}">&lt;上一页</a>
+                {% endif %}
+                {% for index in paginator.page_range %}
+                    <a href="/search?q={{ query }}&page={{ index }}"
+                       {% if index == page.number %}class="active"{% endif %}>{{ index }}</a>
+                {% endfor %}
+                {% if page.has_next %}
+                    <a href="/search?q={{ query }}&page={{ page.next_page_number }}">下一页></a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block bottom_js %}
+    <div class="popup_con">
+        <div class="popup">
+            <p>加入购物车成功，等待1秒关闭！</p>
+        </div>
+
+        <div class="mask"></div>
+    </div>
+    <script type="text/javascript">
+        $('.add_goods').click(function () {
+            var sku_id = $(this).parents('li').prev().prev().val();
+            var count = $(this).parents('li').prev().val();
+
+            var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+            console.log(sku_id)
+            console.log(count)
+
+            var params = {
+                'csrfmiddlewaretoken': csrf,
+                'sku_id': sku_id,
+                'count': count,
+            };
+
+            $.post('/cart/add', params, function (data) {
+                // data:返回的请求结果
+                if (data.code == '0') {
+                    // 请求成功
+                    // 淡入，显示窗口
+                    $('.popup_con').fadeIn('fast', function () {
+                        setTimeout(function () {
+                            // 淡出，隐藏窗口
+                            $('.popup_con').fadeOut('fast');
+                        }, 1000)
+                    });
+                } else {
+                    //请求失败,添加商品到购物车失败
+                    alert(data.errmsg);
+                }
+            });
+        });
+
+    </script>
+{% endblock %}
+
+
